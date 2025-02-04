@@ -1,5 +1,6 @@
 clear variables;
 rng(0, 'twister');
+addpath('../tools')
 
 %% Download and Load w8a Dataset
 
