@@ -8,3 +8,13 @@ RobustRegression/w8a
 **/**/*.pdf
 **/**/*.tiff
 **/**/*.jpg
+new/breast-cancer-wisconsin.csv
+new/slurmJob/FedMLS_det.sbatch
+new/slurmJob/FedMLS_det.sh
+new/slurmJob/FedMLS_sto.sbatch
+new/slurmJob/FedMLS_sto.sh
+code/breast-cancer-wisconsin.csv
+code/slurmJob/FedMLS_det.sbatch
+code/slurmJob/FedMLS_det.sh
+code/slurmJob/FedMLS_sto.sbatch
+code/slurmJob/FedMLS_sto.sh
