@@ -139,45 +139,45 @@ LR_Sweep = [1e-4, 1e-3, 1e-2];
 
 xFedAvg = cell(length(LR_Sweep),1);
 infoFedAvg = cell(length(LR_Sweep),1);
-for i = 1:length(LR_Sweep)
-    lr0 = LR_Sweep(i);
-    [xFedAvg{i}, infoFedAvg{i}] = FedAvg(A, b, obj, grad, nrComRnd, nrLcStep0, lr0);
-end
+% for i = 1:length(LR_Sweep)
+%     lr0 = LR_Sweep(i);
+%     [xFedAvg{i}, infoFedAvg{i}] = FedAvg(A, b, obj, grad, nrComRnd, nrLcStep0, lr0);
+% end
 
 %% FedMLS
 
-Lambda_Sweep = [1e-1, 1, 10];
-
-xFedMLS = cell(length(Lambda_Sweep),1);
-infoFedMLS = cell(length(Lambda_Sweep),1);
-for i = 1:length(Lambda_Sweep)
-    lambda0 = Lambda_Sweep(i);
-    [xFedMLS{i}, infoFedMLS{i}] = FedMLS(A, b, obj, grad, nrComRnd, nrLcStep0, lambda0);
-end
+% Lambda_Sweep = [1e-1, 1, 10];
+% 
+% xFedMLS = cell(length(Lambda_Sweep),1);
+% infoFedMLS = cell(length(Lambda_Sweep),1);
+% for i = 1:length(Lambda_Sweep)
+%     lambda0 = Lambda_Sweep(i);
+%     [xFedMLS{i}, infoFedMLS{i}] = FedMLS(A, b, obj, grad, nrComRnd, nrLcStep0, lambda0);
+% end
 
 %% Save Results
-
-out.xFedAvg = xFedAvg;
-out.xFedMLS = xFedMLS;
-out.infoFedAvg = infoFedAvg;
-out.infoFedMLS = infoFedMLS;
-out.xCVX = xCVX;
-out.cvx_optval = cvx_optval;
-
-mkdir results;
-save('results/main_svm_deterministic.mat','out');
+% 
+% out.xFedAvg = xFedAvg;
+% out.xFedMLS = xFedMLS;
+% out.infoFedAvg = infoFedAvg;
+% out.infoFedMLS = infoFedMLS;
+% out.xCVX = xCVX;
+% out.cvx_optval = cvx_optval;
+% 
+% mkdir results;
+% save('results/main_svm_deterministic.mat','out');
 
 
 %% Scaffnew
 
-% pComm = 1;
-% nrIters = infoFedMLS{1}.numLS(end);
-% xScaffnew = cell(length(LR_Sweep),1);
-% infoScaffnew = cell(length(LR_Sweep),1);
-% for i = 1:length(LR_Sweep)
-%     lr = LR_Sweep(i);
-%     [xScaffnew{i}, infoScaffnew{i}] = Scaffnew(A, b, obj, grad, nrIters, pComm, lr);
-% end
+pComm = 100;
+nrIters = nrComRnd^2;
+xScaffnew = cell(length(LR_Sweep),1);
+infoScaffnew = cell(length(LR_Sweep),1);
+for i = 2:length(LR_Sweep)
+    lr0 = LR_Sweep(i);
+    [xScaffnew{i}, infoScaffnew{i}] = Scaffnew(A, b, obj, grad, nrIters, pComm, 1e-3);
+end
 
 
 %% 

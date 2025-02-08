@@ -1,14 +1,43 @@
 clear all;
 close all;
 
-load results/main_svm_stochastic_10.mat
+TOTSEEDNUM = 20;
+
 Lambda_Sweep = [1e-1, 1, 10];
 LR_Sweep = [1e-4, 1e-3, 1e-2];
+
+avg_FedMLS = {};
+avg_FedAvg = {};
+for i = 1:length(Lambda_Sweep)
+    avg_FedMLS{i}.relerr = 0;
+    avg_FedMLS{i}.numLS = 0;
+end
+for i = 1:length(LR_Sweep)
+    avg_FedAvg{i}.relerr = 0;
+    avg_FedAvg{i}.numLS = 0;
+end
+
+for SEED = 1:TOTSEEDNUM
+
+    load(['results/main_svm_stochastic_',num2str(SEED),'.mat']);
+    rel_err = @(val) (val - out.cvx_optval) ./ out.cvx_optval;
+    
+    for i = 1:length(Lambda_Sweep)
+        avg_FedMLS{i}.relerr = avg_FedMLS{i}.relerr + (1/TOTSEEDNUM) * rel_err(out.infoFedMLS{i}.obj);
+        avg_FedMLS{i}.numLS = avg_FedMLS{i}.numLS + (1/TOTSEEDNUM) * out.infoFedMLS{i}.numLS;
+    end
+
+    for i = 1:length(LR_Sweep)
+        avg_FedAvg{i}.relerr = avg_FedAvg{i}.relerr + (1/TOTSEEDNUM) * rel_err(out.infoFedAvg{i}.obj);
+        avg_FedAvg{i}.numLS = avg_FedAvg{i}.numLS + (1/TOTSEEDNUM) * out.infoFedAvg{i}.numLS;
+    end
+end
+
+%%
 
 % [xSG, infoSG] = SubgradDescent(trainFeatures_aug, trainLabels, obj, grad, 1e6, 0.01);
 % 
 % 
-rel_err = @(val) (val - out.cvx_optval) ./ out.cvx_optval;
 
 %%
 
@@ -24,8 +53,8 @@ legendText1 = {};
 legendHandles1 = [];
 hold on
 for i = 1:length(Lambda_Sweep)
-    hsc1{i} = loglog( rel_err(out.infoFedMLS{i}.obj) ,'LineStyle','-', 'Color', colors(i,:));
-    loglog( out.infoFedMLS{i}.numLS, rel_err(out.infoFedMLS{i}.obj) , 'LineStyle',':', 'Color', colors(i,:));
+    hsc1{i} = loglog( avg_FedMLS{i}.relerr ,'LineStyle','-', 'Color', colors(i,:),'LineWidth', 2.5);
+    loglog( avg_FedMLS{i}.numLS, avg_FedMLS{i}.relerr , 'LineStyle',':', 'Color', colors(i,:),'LineWidth', 1.5);
     legendText1{i} = ['$\lambda_0 = ', num2str(out.infoFedMLS{i}.lambda0),'$'];
     legendHandles1(i) = hsc1{i};
 end
@@ -39,8 +68,8 @@ legendText2 = {};
 legendHandles2 = [];
 hold on
 for i = 1:length(LR_Sweep)
-    hsc2{i} = loglog( rel_err(out.infoFedAvg{i}.obj) ,'LineStyle','-', 'Color', colors(i,:));
-    loglog( out.infoFedAvg{i}.numLS, rel_err(out.infoFedAvg{i}.obj) , 'LineStyle',':', 'Color', colors(i,:));
+    hsc2{i} = loglog( avg_FedAvg{i}.relerr ,'LineStyle','-', 'Color', colors(i,:),'LineWidth', 2.5);
+    loglog( avg_FedAvg{i}.numLS, avg_FedAvg{i}.relerr , 'LineStyle',':', 'Color', colors(i,:),'LineWidth', 1.5);
     legendText2{i} = ['$\eta_0 = ', num2str(out.infoFedAvg{i}.lr0),'$'];
     legendHandles2(i) = hsc2{i};
 end
@@ -50,11 +79,11 @@ subplot(1,2,1)
 for i = 1:2
     subplot(1,2,i)
 
-    ylim([1e-4, 1e3])
+    ylim([1e-3, 1e3])
     xlim([1, 1e8])
     
     ax = gca;
-    set(findall(ax, 'Type', 'Line'),'LineWidth', 2.5);
+%     set(findall(ax, 'Type', 'Line'),'LineWidth', 2.5);
     
     ax.XScale = 'log';
     ax.YScale = 'log';

@@ -20,9 +20,9 @@ N = numel(A);
 info.nrIters = nrIters;
 info.pComm0 = pComm0;
 info.lr0 = lr0;
-info.obj = zeros(nrIters*pComm0*5,1); % Objective value at the end of this round
-info.time = zeros(nrIters*pComm0*5,1); % wall clock time at the end of this round
-info.numLS = zeros(nrIters*pComm0*5,1); % Total number local steps after this round
+info.obj = zeros(nrIters*pComm0/1e3,1); % Objective value at the end of this round
+info.time = zeros(nrIters*pComm0/1e3,1); % wall clock time at the end of this round
+info.numLS = zeros(nrIters*pComm0/1e3,1); % Total number local steps after this round
 numCommRound = 0; % Communication round counter
 
 % Initialize the global model
@@ -49,6 +49,7 @@ for k = 1:nrIters
         % Compute the local subgradient
         g = grad(A{i}, b{i}, x{i});
 
+        lr = lr0/sqrt(k);
         % Update the parameters
         x{i} = x{i} - lr * g;
 
@@ -56,7 +57,8 @@ for k = 1:nrIters
     
     % Communicate with probability pComm0/sqrt(k)
     % Note: we always communicate in the last iteration
-    if (rand(1) < pComm0/sqrt(k)) || (k == nrIters) 
+    pComm = pComm0/sqrt(k);
+    if (rand(1) < pComm) || (k == nrIters) 
 
         % Aggregation
         xAvg = 0;
@@ -68,7 +70,7 @@ for k = 1:nrIters
         numCommRound = numCommRound + 1; 
         
         % Update learning rate
-        lr = lr0/sqrt(numCommRound);
+%         lr = lr0/sqrt(numCommRound);
 
         % Compute the objective, update the performance struct
         for i = 1:N
@@ -92,7 +94,7 @@ for k = 1:nrIters
 
     % Update the control variables
     for i = 1:N
-        h{i} = h{i} + (pComm0/lr) * (xAvg - x{i});
+        h{i} = h{i} + (pComm/lr) * (xAvg - x{i});
     end
 
 end

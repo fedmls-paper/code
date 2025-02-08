@@ -1,5 +1,5 @@
 % clear variables;
-SEEDNUMBER = 0;
+% SEEDNUMBER = 0;
 rng(SEEDNUMBER, 'twister');
 addpath('../tools')
 
@@ -169,7 +169,6 @@ out.cvx_optval = cvx_optval;
 
 mkdir results;
 save(['results/main_svm_stochastic_',num2str(SEEDNUMBER),'.mat'],'out');
-
 
 %% Scaffnew
 
