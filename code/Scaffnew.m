@@ -12,7 +12,6 @@ function [xOut, info] = Scaffnew(A, b, obj, grad, nrIters, pComm0, lr0)
 %     xOut      - the aggregated model after the final round
 %     info      - Struct containing performance metrics (e.g., loss values)
 
-
 % Number of clients
 N = numel(A);
 
@@ -20,9 +19,9 @@ N = numel(A);
 info.nrIters = nrIters;
 info.pComm0 = pComm0;
 info.lr0 = lr0;
-info.obj = zeros(nrIters*pComm0/1e3,1); % Objective value at the end of this round
-info.time = zeros(nrIters*pComm0/1e3,1); % wall clock time at the end of this round
-info.numLS = zeros(nrIters*pComm0/1e3,1); % Total number local steps after this round
+info.obj = zeros(nrIters * pComm0 / 1e3, 1); % Objective value at the end of this round
+info.time = zeros(nrIters * pComm0 / 1e3, 1); % wall clock time at the end of this round
+info.numLS = zeros(nrIters * pComm0 / 1e3, 1); % Total number local steps after this round
 numCommRound = 0; % Communication round counter
 
 % Initialize the global model
@@ -31,34 +30,36 @@ xAvg = zeros(size(A{1},2), 1);
 % Initialize the local models
 x = cell(1, N);
 h = cell(1, N);
-for i = 1:N, h{i} = 0; end
+for i = 1:N
+    h{i} = 0;
+end
 
 % Broadcast the aggregated model to all clients
-for i = 1:N, x{i} = xAvg; end
-
-lr = lr0;
+for i = 1:N
+    x{i} = xAvg;
+end
 
 % initiate timer
 timestart = tic;
 
 % Local iterations
 for k = 1:nrIters
-        
-    for i = 1:N % for all clients
 
+    % Update learning rate
+    lr = lr0 / sqrt(k);
+
+    for i = 1:N % for all clients
         % Compute the local subgradient
         g = grad(A{i}, b{i}, x{i});
 
-        lr = lr0/sqrt(k);
         % Update the parameters
-        x{i} = x{i} - lr * g;
-
+        x{i} = x{i} - lr * (g - h{i});
     end
-    
-    % Communicate with probability pComm0/sqrt(k)
+
+    % Communicate with probability pComm0 / sqrt(k)
     % Note: we always communicate in the last iteration
-    pComm = pComm0/sqrt(k);
-    if (rand(1) < pComm) || (k == nrIters) 
+    pComm = pComm0 / sqrt(k);
+    if (rand(1) < pComm) || (k == nrIters)
 
         % Aggregation
         xAvg = 0;
@@ -67,10 +68,10 @@ for k = 1:nrIters
         end
 
         % Update the communication round counter
-        numCommRound = numCommRound + 1; 
-        
+        numCommRound = numCommRound + 1;
+
         % Update learning rate
-%         lr = lr0/sqrt(numCommRound);
+        % lr = lr0/sqrt(numCommRound);
 
         % Compute the objective, update the performance struct
         for i = 1:N
@@ -90,13 +91,11 @@ for k = 1:nrIters
             x{i} = xAvg;
         end
 
+        % Update the control variables
+        for i = 1:N
+            h{i} = h{i} + (pComm / lr) * (xAvg - x{i});
+        end
     end
-
-    % Update the control variables
-    for i = 1:N
-        h{i} = h{i} + (pComm/lr) * (xAvg - x{i});
-    end
-
 end
 
 % Model to output
