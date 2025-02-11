@@ -1,5 +1,5 @@
 % clear variables;
-% SEEDNUMBER = 0;
+% SEEDNUMBER = 2;
 rng(SEEDNUMBER, 'twister');
 addpath('../tools')
 
@@ -90,11 +90,13 @@ for i = 1:N
 end
 
 %% (Optional) Visualize the clustering result on the training data using the first two features
-% figure;
-% gscatter(trainFeatures(:,1), trainFeatures(:,2), idx);
-% xlabel('Feature 1');
-% ylabel('Feature 2');
-% title('K-means Clustering of Training Data (Breast Cancer)');
+if 0
+    figure;
+    gscatter(trainFeatures(:,1), trainFeatures(:,2), idx);
+    xlabel('Feature 1');
+    ylabel('Feature 2');
+    title('K-means Clustering of Training Data (Breast Cancer)');
+end
 
 %% Find ground truth by solving the constrained SVM with CVX using the augmented data
 [m, d] = size(trainFeatures_aug);  % d is the original feature dimension
@@ -150,7 +152,6 @@ end
 %% FedMLS
 
 Lambda_Sweep = [1e-1, 1, 10];
-
 xFedMLS = cell(length(Lambda_Sweep),1);
 infoFedMLS = cell(length(Lambda_Sweep),1);
 for i = 1:length(Lambda_Sweep)
@@ -158,29 +159,43 @@ for i = 1:length(Lambda_Sweep)
     [xFedMLS{i}, infoFedMLS{i}] = FedMLS(A, b, obj, grad, nrComRnd, nrLcStep0, lambda0);
 end
 
+%% Scaffold
+
+LR_Sweep = [1e-4, 1e-3, 1e-2];
+xScaffold = cell(length(LR_Sweep),1);
+infoScaffold = cell(length(LR_Sweep),1);
+for i = 1:length(LR_Sweep)
+    lr = LR_Sweep(i);
+    [xScaffold{i}, infoScaffold{i}] = Scaffold(A, b, obj, grad, nrComRnd, nrLcStep0, 2, 1, lr);
+end
+
+%% Scaffnew
+
+pComm = 1;
+LR_Sweep = [1e-4, 1e-3, 1e-2];
+nrIters = infoFedMLS{1}.numLS(end);
+xScaffnew = cell(length(LR_Sweep),1);
+infoScaffnew = cell(length(LR_Sweep),1);
+for i = 1:length(LR_Sweep)
+    lr = LR_Sweep(i);
+    [xScaffnew{i}, infoScaffnew{i}] = Scaffnew(A, b, obj, grad, nrIters, pComm, lr);
+end
+
 %% Save Results
 
 out.xFedAvg = xFedAvg;
+out.xScaffold = xScaffold;
+out.xScaffnew = xScaffnew;
 out.xFedMLS = xFedMLS;
 out.infoFedAvg = infoFedAvg;
+out.infoScaffold = infoScaffold;
+out.infoScaffnew = infoScaffnew;
 out.infoFedMLS = infoFedMLS;
 out.xCVX = xCVX;
 out.cvx_optval = cvx_optval;
 
 mkdir results;
 save(['results/main_svm_stochastic_',num2str(SEEDNUMBER),'.mat'],'out');
-
-%% Scaffnew
-
-% pComm = 1;
-% nrIters = infoFedMLS{1}.numLS(end);
-% xScaffnew = cell(length(LR_Sweep),1);
-% infoScaffnew = cell(length(LR_Sweep),1);
-% for i = 1:length(LR_Sweep)
-%     lr = LR_Sweep(i);
-%     [xScaffnew{i}, infoScaffnew{i}] = Scaffnew(A, b, obj, grad, nrIters, pComm, lr);
-% end
-
 
 %% 
 % rel_err = @(val) (val - cvx_optval) ./ cvx_optval;
