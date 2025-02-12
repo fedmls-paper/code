@@ -1,5 +1,5 @@
 % clear variables;
-% SEEDNUMBER = 2;
+% SEEDNUMBER = 0;
 rng(SEEDNUMBER, 'twister');
 addpath('../tools')
 
@@ -141,7 +141,6 @@ nrLcStep0 = 1;
 %% FedAvg
 
 LR_Sweep = [1e-4, 1e-3, 1e-2];
-
 xFedAvg = cell(length(LR_Sweep),1);
 infoFedAvg = cell(length(LR_Sweep),1);
 for i = 1:length(LR_Sweep)
@@ -161,19 +160,23 @@ end
 
 %% Scaffold
 
-LR_Sweep = [1e-4, 1e-3, 1e-2];
-xScaffold = cell(length(LR_Sweep),1);
-infoScaffold = cell(length(LR_Sweep),1);
-for i = 1:length(LR_Sweep)
-    lr = LR_Sweep(i);
-    [xScaffold{i}, infoScaffold{i}] = Scaffold(A, b, obj, grad, nrComRnd, nrLcStep0, 2, 1, lr);
+% LRg_Sweep = [1e-1, 1e-0, 1e1];
+LRl_Sweep = [1e-4, 1e-3, 1e-2];
+xScaffold = cell(length(LRl_Sweep), 1);
+infoScaffold = cell(length(LRl_Sweep), 1);
+% for i = 1:length(LRg_Sweep)
+for i = 1:length(LRl_Sweep)
+    lrg = sqrt(N);  % LRg_Sweep(i);
+    lrl = LRl_Sweep(i);
+    [xScaffold{i}, infoScaffold{i}] = Scaffold(A, b, obj, grad, nrComRnd, nrLcStep0, 2, lrg, lrl);
 end
+% end
 
 %% Scaffnew
 
 pComm = 1;
 LR_Sweep = [1e-4, 1e-3, 1e-2];
-nrIters = infoFedMLS{1}.numLS(end);
+nrIters = infoFedMLS{1}.numLS(end);  % 7501000;
 xScaffnew = cell(length(LR_Sweep),1);
 infoScaffnew = cell(length(LR_Sweep),1);
 for i = 1:length(LR_Sweep)

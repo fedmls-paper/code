@@ -42,11 +42,13 @@ end
 % initiate timer
 timestart = tic;
 
+lr = lr0;
+
 % Local iterations
 for k = 1:nrIters
 
     % Update learning rate
-    lr = lr0 / sqrt(k);
+    lr = lr0 / k;
 
     for i = 1:N % for all clients
         % Compute the local subgradient
@@ -56,9 +58,13 @@ for k = 1:nrIters
         x{i} = x{i} - lr * (g - h{i});
     end
 
+    % Anneal the probability as O(1 / sqrt(k))
+    pComm = pComm0 / sqrt(k);
+    % pComm = pComm0 / (k^(3 / 4));
+    % pComm = pComm0 / k;
+
     % Communicate with probability pComm0 / sqrt(k)
     % Note: we always communicate in the last iteration
-    pComm = pComm0 / sqrt(k);
     if (rand(1) < pComm) || (k == nrIters)
 
         % Aggregation
@@ -71,7 +77,8 @@ for k = 1:nrIters
         numCommRound = numCommRound + 1;
 
         % Update learning rate
-        % lr = lr0/sqrt(numCommRound);
+        % lr = lr0 / sqrt(numCommRound);
+        % lr = lr0 / k;
 
         % Compute the objective, update the performance struct
         for i = 1:N
