@@ -48,7 +48,8 @@ lr = lr0;
 for k = 1:nrIters
 
     % Update learning rate
-    lr = lr0 / k;
+    % lr = lr0 / k;
+    lr = lr0 / sqrt(k);
 
     for i = 1:N % for all clients
         % Compute the local subgradient
